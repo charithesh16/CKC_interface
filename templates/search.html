@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Advanced Search</h2>
+    <form method="POST" action="{{ url_for('search') }}" class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <!-- Search Term -->
+                <div class="form-group mb-3">
+                    <label for="search_term">Search Term:</label>
+                    <input type="text" class="form-control" id="search_term" name="search_term" required
+                           placeholder="Enter exact word to search">
+                    <small class="form-text text-muted">The search will match exact words only</small>
+                </div>
+
+                <!-- Column Selection -->
+                <div class="form-group mb-3">
+                    <label for="selected_columns">Search in:</label>
+                    <select class="form-control select2" id="selected_columns" name="selected_columns" multiple required>
+                        <option value="sentence">Sentences</option>
+                        <option value="Companies">Companies</option>
+                        <option value="Exact Match Locations">Locations</option>
+                        <option value="keywords">Keywords</option>
+                    </select>
+                    <small class="form-text text-muted">Select one or more fields to search in</small>
+                </div>
+
+                <!-- Administrative Level -->
+                <div class="form-group mb-3">
+                    <label for="level">Group Results by:</label>
+                    <select class="form-control" id="level" name="level">
+                        <option value="country">Country</option>
+                        <option value="province">Province</option>
+                        <option value="district">District</option>
+                    </select>
+                </div>
+
+                <!-- Province Selection (initially hidden) -->
+                <div class="form-group mb-3 province-select" style="display: none;">
+                    <label for="province">Select Province:</label>
+                    <select class="form-control" id="province" name="province">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- District Selection (initially hidden) -->
+                <div class="form-group mb-3 district-select" style="display: none;">
+                    <label for="district">Select District:</label>
+                    <select class="form-control" id="district" name="district">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize Select2
+    $('.select2').select2({
+        placeholder: 'Select fields to search in',
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Handle administrative level changes
+    $('#level').change(function() {
+        const level = $(this).val();
+        const provinceSelect = $('.province-select');
+        const districtSelect = $('.district-select');
+
+        if (level === 'province' || level === 'district') {
+            provinceSelect.show();
+            if (level === 'district') {
+                districtSelect.show();
+            } else {
+                districtSelect.hide();
+            }
+        } else {
+            provinceSelect.hide();
+            districtSelect.hide();
+        }
+    });
+
+    // Load provinces when province selection is shown
+    $('.province-select').on('show', function() {
+        $.get('/api/provinces', function(data) {
+            const provinceSelect = $('#province');
+            provinceSelect.empty();
+            data.forEach(province => {
+                provinceSelect.append(new Option(province, province));
+            });
+        });
+    });
+
+    // Load districts when province is selected
+    $('#province').change(function() {
+        const province = $(this).val();
+        if (province) {
+            $.get(`/api/districts/${province}`, function(data) {
+                const districtSelect = $('#district');
+                districtSelect.empty();
+                data.forEach(district => {
+                    districtSelect.append(new Option(district, district));
+                });
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

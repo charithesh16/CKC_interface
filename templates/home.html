@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnam Data Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Vietnam Data Explorer</h1>
+            <p class="text-xl text-gray-600">Explore spatial and keyword-based data analysis</p>
+        </div>
+
+        <!-- Main navigation cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <!-- Spatial Analysis Card -->
+            <a href="/spatial/Vietnam" class="group">
+                <div class="bg-white rounded-lg shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:transform hover:-translate-y-1">
+                    <div class="mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-500 mb-2 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <h2 class="text-2xl font-bold text-gray-800 group-hover:text-blue-600">Spatial Analysis</h2>
+                    </div>
+                    <p class="text-gray-600">
+                        Explore data through an interactive map interface. Navigate through provinces and districts to discover detailed information about each region.
+                    </p>
+                </div>
+            </a>
+
+            <!-- Keywords Analysis Card -->
+            <a href="/keywords" class="group">
+                <div class="bg-white rounded-lg shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:transform hover:-translate-y-1">
+                    <div class="mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500 mb-2 group-hover:text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        <h2 class="text-2xl font-bold text-gray-800 group-hover:text-green-600">Keyword Analysis</h2>
+                    </div>
+                    <p class="text-gray-600">
+                        Analyze keyword distribution across different regions. View keyword frequencies and associated articles for each location.
+                    </p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="mt-12 bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Dataset Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-500">{{ total_provinces }}</div>
+                    <div class="text-gray-600">Provinces</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-green-500">{{ total_keywords }}</div>
+                    <div class="text-gray-600">Keywords</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-purple-500">{{ total_articles }}</div>
+                    <div class="text-gray-600">sentences with locations</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ name }} Details</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mx-auto px-4 py-8">
+    <!-- Navigation breadcrumb -->
+    <div class="mb-6">
+<!--        <a href="/spatial/Vietnam" class="hover:text-blue-500">Vietnam</a>-->
+        {% if request.path != "/spatial/Vietnam" %}
+            <span class="mx-2">/</span>
+            {% if '/' in request.path[9:] %}
+                {% set parts = request.path[9:].split('/') %}
+                <a href="/spatial/{{ parts[0] }}" class="hover:text-blue-500">{{ parts[0] }}</a>
+                {% if parts|length >1 %}
+                    <span class="mx-2">/</span>
+<!--                    <span>{{ parts[1] }}</span>-->
+                <a href="/spatial/{{ parts[0] }}/{{parts[1]}}" class="hover:text-blue-500">{{ parts[1] }}</a>
+                {% endif %}
+            {% else %}
+                <span>{{ name }}</span>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="search-container" style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+    <form id="searchForm" onsubmit="handleSearch(event)" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+        <!-- Text input -->
+        <div>
+            <input type="text" id="searchText" placeholder="Enter search term"
+                   style="padding: 6px 12px;
+                          border: 1px solid #ced4da;
+                          border-radius: 4px;
+                          width: 200px;
+                          font-size: 14px;">
+        </div>
+
+        <!-- Checkboxes -->
+        <div style="display: flex; gap: 10px;">
+            <label style="font-size: 14px; white-space: nowrap;">
+                <input type="checkbox" id="sentenceCheck" value="sentence"
+                       style="margin-right: 5px;"> Sentence
+            </label>
+            <label style="font-size: 14px; white-space: nowrap;">
+                <input type="checkbox" id="keywordsCheck" value="keywords"
+                       style="margin-right: 5px;"> Keywords
+            </label>
+        </div>
+
+        <!-- Date range pickers -->
+        <div style="display: flex; gap: 10px;">
+            <label style="font-size: 14px; white-space: nowrap;">
+                From:
+                <input type="date" id="startDate"
+       style="padding: 6px 12px;
+              border: 1px solid #ced4da;
+              border-radius: 4px;
+              margin-left: 5px;"
+       placeholder="MM/DD/YYYY">
+            </label>
+            <label style="font-size: 14px; white-space: nowrap;">
+                To:
+                <input type="date" id="endDate"
+       style="padding: 6px 12px;
+              border: 1px solid #ced4da;
+              border-radius: 4px;
+              margin-left: 5px;"
+       placeholder="MM/DD/YYYY">
+            </label>
+        </div>
+
+        <!-- Search button -->
+        <button type="submit"
+                style="padding: 6px 12px;
+                       background-color: #007bff;
+                       color: white;
+                       border: none;
+                       border-radius: 4px;
+                       cursor: pointer;
+                       font-size: 14px;
+                       white-space: nowrap;">
+            Search
+        </button>
+    </form>
+        <div style=" top: 20px; right: 20px; z-index: 1000;">
+    <button onclick="downloadData()" class="download-button">
+        <i class="fas fa-download"></i> Download Data
+    </button>
+</div>
+</div>
+    <script>
+    function handleSearch(event) {
+    event.preventDefault();
+
+    // Get current URL parameters
+    const currentParams = new URLSearchParams(window.location.search);
+
+    // Get values from form elements
+    const searchText = document.getElementById('searchText').value;
+    const sentenceChecked = document.getElementById('sentenceCheck').checked;
+    const keywordsChecked = document.getElementById('keywordsCheck').checked;
+
+    // Get dates and format them
+    let startDate = document.getElementById('startDate').value;
+    let endDate = document.getElementById('endDate').value;
+
+    // Convert dates from yyyy-mm-dd to mm/dd/yyyy
+    if (startDate) {
+        const [year, month, day] = startDate.split('-');
+        startDate = `${month}/${day}/${year}`;
+    }
+    if (endDate) {
+        const [year, month, day] = endDate.split('-');
+        endDate = `${month}/${day}/${year}`;
+    }
+
+    // Add new search parameters
+    if (searchText) currentParams.set('search_term', searchText);
+
+    // Remove existing column parameters and add new ones
+    currentParams.delete('columns');
+    if (sentenceChecked) currentParams.append('columns', 'sentence');
+    if (keywordsChecked) currentParams.append('columns', 'keywords');
+
+    if (startDate) currentParams.set('start_date', startDate);
+    if (endDate) currentParams.set('end_date', endDate);
+
+    // Construct new URL with all parameters
+    const url = `${window.location.pathname}?${currentParams.toString()}`;
+    window.location.href = url;
+}
+</script>
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">Details for {{ name }}</h1>
+        <p class="text-gray-600">Coordinates: {{ data['coordinates'] }}</p>
+    </div>
+    <!-- Add this button at the top right corner of the page -->
+
+<style>
+    .download-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.download-button:hover {
+    background-color: #45a049;
+}
+</style>
+<!--<div style=" top: 20px; right: 20px; z-index: 1000;">-->
+<!--    <button onclick="downloadData()" class="download-button">-->
+<!--        <i class="fas fa-download"></i> Download Data-->
+<!--    </button>-->
+<!--</div>-->
+
+<!-- Add this JavaScript function -->
+<script>
+function downloadData() {
+    // Get current URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Construct download URL with current parameters
+    let downloadUrl = '/download_data?';
+
+    // Add current search parameters
+    if (urlParams.has('search_term')) {
+        downloadUrl += `search_term=${urlParams.get('search_term')}&`;
+    }
+
+    // Handle multiple columns parameters
+    const columns = urlParams.getAll('columns');
+    if (columns.length > 0) {
+        columns.forEach(column => {
+            downloadUrl += `columns=${encodeURIComponent(column)}&`;
+        });
+    }
+
+    if (urlParams.has('start_date')) {
+        downloadUrl += `start_date=${urlParams.get('start_date')}&`;
+    }
+    if (urlParams.has('end_date')) {
+        downloadUrl += `end_date=${urlParams.get('end_date')}&`;
+    }
+
+    // Add location parameters based on current page
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts.includes('spatial')) {
+        downloadUrl += `country=Vietnam&`;
+        if (pathParts.length > 3) {
+            downloadUrl += `province=${pathParts[3]}&`;
+        }
+        if (pathParts.length > 4) {
+            downloadUrl += `district=${pathParts[4]}&`;
+        }
+    }
+
+    // Remove trailing '&' if exists
+    downloadUrl = downloadUrl.endsWith('&') ? downloadUrl.slice(0, -1) : downloadUrl;
+
+    // Trigger download
+    window.location.href = downloadUrl;
+}
+</script>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-700">Row Count</h3>
+            <p>{{ data['row_count'] }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-700">Total Keyword Mentions</h3>
+            <p>{{ data['keyword_count'] }}</p>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div id="map">
+            {{ map_html | safe }}
+        </div>
+    </div>
+
+
+
+    <!-- Keywords Section -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <h2 class="text-xl font-bold mb-4">Keywords</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for keyword, count in data["keywords"].items() | sort(attribute=1, reverse=true) %}
+            <div class="p-2 bg-gray-50 rounded">
+                <span class="font-medium">
+                    <a href="/keyword/{{keyword}}/country" target="_blank">{{ keyword }}</a> :</span> {{ count }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+<!--    <div class="section">-->
+<!--    <div class="card">-->
+<!--        <div class="card-header">-->
+<!--            <h2>Companies</h2>-->
+<!--        </div>-->
+
+<!--        <div class="card-body">-->
+<!--            <div class="table-responsive">-->
+<!--                <h3>Metal Companies</h3>-->
+<!--                {% if companies.metal %}-->
+<!--                <table class="table table-bordered table-hover">-->
+<!--                    <thead class="thead-light">-->
+<!--                        <tr>-->
+<!--                            <th>Company Name</th>-->
+<!--                            <th>Industries</th>-->
+<!--                        </tr>-->
+<!--                    </thead>-->
+<!--                    <tbody>-->
+<!--                        {% for company in companies.metal %}-->
+<!--                        <tr>-->
+<!--                            <td>{{ company.name }}</td>-->
+<!--                            <td>{{ company.shortname }}</td>-->
+<!--                            <td>{{ company.industry }}</td>-->
+<!--                        </tr>-->
+<!--                        {% endfor %}-->
+<!--                    </tbody>-->
+<!--                </table>-->
+<!--                {% else %}-->
+<!--                <p>No metal companies found in this area.</p>-->
+<!--                {% endif %}-->
+
+<!--                <h3>Non-Metal Companies</h3>-->
+<!--                {% if companies.non_metal %}-->
+<!--                <table class="table table-bordered table-hover">-->
+<!--                    <thead class="thead-light">-->
+<!--                        <tr>-->
+<!--                            <th>Company Name</th>-->
+<!--                            <th>Industries</th>-->
+<!--                        </tr>-->
+<!--                    </thead>-->
+<!--                    <tbody>-->
+<!--                        {% for company in companies.non_metal %}-->
+<!--                        <tr>-->
+<!--                            <td>{{ company.name }}</td>-->
+<!--                            <td>{{ company.industry }}</td>-->
+<!--                        </tr>-->
+<!--                        {% endfor %}-->
+<!--                    </tbody>-->
+<!--                </table>-->
+<!--                {% else %}-->
+<!--                <p>No non-metal companies found in this area.</p>-->
+<!--                {% endif %}-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+    <h1>Bigram Graph Visualization</h1>
+    <img src="{{ url_for('static', filename=image_name) }}" alt="Bigram Graph">
+    <h1>Word Cloud</h1>
+    <img src="{{ url_for('static', filename=word_cloud_image) }}" alt="Word Cloud">
+
+<!-- Metal Companies Section -->
+<div class="company-section" style="margin: 20px 0;">
+    <button class="collapsible-btn"
+            onclick="toggleTable('metalTable')"
+            style="width: 100%;
+                   padding: 10px;
+                   background-color: #f8f9fa;
+                   border: 1px solid #dee2e6;
+                   border-radius: 4px;
+                   text-align: left;
+                   cursor: pointer;
+                   font-size: 16px;">
+        ▶ Metal Companies
+    </button>
+    <div id="metalTable" style="display: none; margin-top: 10px;">
+        {% if companies.metal %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Company Name</th>
+                    <th>Doing Business As</th>
+                    <th>Industries</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in companies.metal %}
+                <tr>
+                    <td>{{ company.name }}</td>
+                    <td>{{ company.shortname }}</td>
+                    <td>{{ company.industry }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-data" style="padding: 10px;">No metal companies found in this area.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Non-Metal Companies Section -->
+<div class="company-section" style="margin: 20px 0;">
+    <button class="collapsible-btn"
+            onclick="toggleTable('nonMetalTable')"
+            style="width: 100%;
+                   padding: 10px;
+                   background-color: #f8f9fa;
+                   border: 1px solid #dee2e6;
+                   border-radius: 4px;
+                   text-align: left;
+                   cursor: pointer;
+                   font-size: 16px;">
+        ▶ Non-Metal Companies
+    </button>
+    <div id="nonMetalTable" style="display: none; margin-top: 10px;">
+        {% if companies.non_metal %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Company Name</th>
+                    <th>Doing Business As</th>
+                    <th>Industries</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for company in companies.non_metal %}
+                <tr>
+                    <td>{{ company.name }}</td>
+                    <td>{{ company.shortname }}</td>
+                    <td>{{ company.industry }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-data" style="padding: 10px;">No non-metal companies found in this area.</div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleTable(tableId) {
+    const content = document.getElementById(tableId);
+    const button = content.previousElementSibling;
+
+    if (content.style.display === "none") {
+        content.style.display = "block";
+        button.innerHTML = button.innerHTML.replace('▶', '▼');
+    } else {
+        content.style.display = "none";
+        button.innerHTML = button.innerHTML.replace('▼', '▶');
+    }
+}
+
+// Add hover effect for buttons
+document.querySelectorAll('.collapsible-btn').forEach(button => {
+    button.addEventListener('mouseover', function() {
+        this.style.backgroundColor = '#e9ecef';
+    });
+    button.addEventListener('mouseout', function() {
+        this.style.backgroundColor = '#f8f9fa';
+    });
+});
+</script>
+    <!-- Interactive Chart -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <h2 class="text-xl font-bold mb-4">Interactive Stacked Bar Chart</h2>
+        <div id="chart"></div>
+    </div>
+
+    <!-- Articles Section -->
+    <div class="bg-white rounded-lg shadow p-4" id="filtered-articles">
+        <h2 class="text-xl font-bold mb-4">Articles</h2>
+        <div id="article-content">
+            <ul class="space-y-2">
+                {% for article in data['articles'] %}
+                 {% if article['source'] is not none and article['source']|lower != 'nan' and article['source']|lower != 'na' %}
+                <li>
+                    {% if article['source'].startswith('http://') or article['source'].startswith('https://') %}
+                        <a href="{{ article['source'] }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                            {{ article['source'] }}
+                        </a>
+                    {% else %}
+                    {% if article['subject'] is not none and article['subject']|lower != 'nan' and article['subject']|lower != 'na' %}
+                    <a href="https://www.google.com/search?q={{ article['subject'] | urlencode }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                            {{ article['subject'] }}
+                        </a>
+                     {% else %}
+                     <a href="https://www.google.com/search?q={{ article['source'] | urlencode }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                            {{ article['source'] }}
+                        </a>
+                    {% endif %}
+                    {% endif %}
+                </li>
+                 {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <!-- Add this after the map section and before the keywords section -->
+
+<!-- Add this CSS to match the styling -->
+<style>
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+}
+
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,.075);
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border: 1px solid #dee2e6;
+}
+
+.thead-light th {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.card {
+    margin-bottom: 20px;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 0.25rem;
+}
+
+.card-header {
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(0,0,0,.03);
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+</style>
+</div>
+    <script>
+        // Parse the graph data
+        const graphData = JSON.parse('{{ graph_json | safe }}');
+        const articleData = graphData.article_data;
+
+        // Modify the layout to fix the legend issue
+graphData.figure.layout.legend = {
+    x: 1, // Position legend on the right
+    y: 1,
+    xanchor: 'left',
+    yanchor: 'top',
+    orientation: 'v', // Vertical legend
+    font: { size: 10 },
+    bordercolor: '#ccc',
+    borderwidth: 1,
+    itemclick: 'toggleothers', // Toggle items on click
+    itemsizing: 'trace', // Compact legend items
+    scroll: true // Enable scrolling
+};
+
+// Adjust the margins to fit the legend
+graphData.figure.layout.margin = {
+    l: 50, // Left margin
+    r: 150, // Increase right margin for the legend
+    t: 50, // Top margin
+    b: 50  // Bottom margin
+};
+
+// Create the plot
+Plotly.newPlot('chart', graphData.figure.data, graphData.figure.layout);
+
+        // Create the plot
+<!--        Plotly.newPlot('chart', graphData.figure.data, graphData.figure.layout);-->
+
+        // Add click event handler
+        document.getElementById('chart').on('plotly_click', function(data) {
+            const point = data.points[0];
+            const year = point.customdata[0];
+            const domain = point.customdata[1];
+
+            // Get articles for the selected year and domain
+            const articles = articleData[year]?.[domain] || [];
+
+            // Update the article list
+            const articleContent = document.getElementById('article-content');
+            if (articles.length > 0) {
+                const articleList = articles.map(url =>{
+<!--                return `<li><a href="${url}" target="_blank" class="text-blue-600 hover:text-blue-800">${url}</a></li>`-->
+                        if (url.startsWith('http://') || url.startsWith('https://')) {
+                            return `<li><a href="${url}" target="_blank" class="text-blue-600 hover:text-blue-800">${url}</a></li>`
+                        }else{
+                            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+                             return `<li><a href="${googleSearchUrl}" target="_blank" class="text-blue-600 hover:text-blue-800">${url}</a></li>`
+                        }
+                }
+                ).join('');
+
+                articleContent.innerHTML = `
+                    <h4 class="text-xl font-bold mb-4">${domain} articles from ${year}</h4>
+                    <ul>${articleList}</ul>
+                `;
+            } else {
+                articleContent.innerHTML = `<p>No articles found for ${domain} in ${year}</p>`;
+            }
+        });
+
+        // Add reset functionality when clicking elsewhere on the chart
+        document.getElementById('chart').on('plotly_clickannotation', function() {
+            const articleContent = document.getElementById('article-content');
+            articleContent.innerHTML = `
+                <ul>
+                 {% for article in data['articles'] %}
+                 {% if article['source'] is not none and article['source']|lower != 'nan' and article['source']|lower != 'na' %}
+                <li>
+                    {% if article['source'].startswith('http://') or article['source'].startswith('https://') %}
+                        <a href="{{ article['source'] }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                            {{ article['source'] }}
+                        </a>
+                    {% else %}
+                    {% if article['subject'] is not none and article['subject']|lower != 'nan' and article['subject']|lower != 'na' %}
+                    <a href="https://www.google.com/search?q={{ article['subject'] | urlencode }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                            {{ article['subject'] }}
+                        </a>
+                     {% else %}
+                     <a href="https://www.google.com/search?q={{ article['source'] | urlencode }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                            {{ article['source'] }}
+                        </a>
+                    {% endif %}
+                    {% endif %}
+                </li>
+                 {% endif %}
+                {% endfor %}
+                </ul>
+            `;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!--{% extends "base.html" %}-->
+{% block content %}
+<div class="container mt-4">
+    <h2>Search Results</h2>
+    <div class="mb-3">
+        <p>Search term: <strong>{{ search_term }}</strong></p>
+        <p>Column: <strong>{{ selected_column }}</strong></p>
+        <p>Results found: <strong>{{ result_count }}</strong></p>
+        <a href="{{ url_for('search') }}" class="btn btn-secondary">New Search</a>
+    </div>
+
+    <div class="map-container">
+        {{ map_html | safe }}
+    </div>
+</div>
+{% endblock %}

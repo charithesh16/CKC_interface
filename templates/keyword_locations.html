@@ -1,0 +1,294 @@
+
+<!-- templates/keyword_locations.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ keyword }} Locations - {{ level|title }} Level</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Navigation Breadcrumb -->
+        <div class="mb-6">
+            <nav class="text-gray-600">
+                <a href="{{ url_for('show_keywords') }}" class="hover:text-blue-500">Keywords</a>
+                <span class="mx-2">/</span>
+                <a href="{{ url_for('show_keyword_country', keyword=keyword) }}" class="hover:text-blue-500">{{ keyword }}</a>
+                {% if level != 'country' %}
+                    <span class="mx-2">/</span>
+                    {% if level == 'province' %}
+                        <span>{{ province }}</span>
+                    {% elif level == 'district' %}
+                        <a href="{{ url_for('show_keyword_province', keyword=keyword, province=province) }}" class="hover:text-blue-500">{{ province }}</a>
+                        <span class="mx-2">/</span>
+                        <span>{{ district }}</span>
+                    {% endif %}
+                {% endif %}
+            </nav>
+        </div>
+
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold">{{ keyword }} Distribution</h1>
+            <p class="text-gray-600">
+                {% if level == 'country' %}
+                    Showing distribution across provinces
+                {% elif level == 'province' %}
+                    Showing distribution in {{ province }}
+                {% else %}
+                    Showing distribution in {{ district }}, {{ province }}
+                {% endif %}
+            </p>
+        </div>
+<div class="search-container" style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+    <form id="searchForm" onsubmit="handleSearch(event)" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+        <!-- Date range pickers -->
+        <div style="display: flex; gap: 10px;">
+            <label style="font-size: 14px; white-space: nowrap;">
+                From:
+                <input type="date" id="startDate"
+       style="padding: 6px 12px;
+              border: 1px solid #ced4da;
+              border-radius: 4px;
+              margin-left: 5px;"
+       placeholder="MM/DD/YYYY">
+            </label>
+            <label style="font-size: 14px; white-space: nowrap;">
+                To:
+                <input type="date" id="endDate"
+       style="padding: 6px 12px;
+              border: 1px solid #ced4da;
+              border-radius: 4px;
+              margin-left: 5px;"
+       placeholder="MM/DD/YYYY">
+            </label>
+        </div>
+
+        <!-- Search button -->
+        <button type="submit"
+                style="padding: 6px 12px;
+                       background-color: #007bff;
+                       color: white;
+                       border: none;
+                       border-radius: 4px;
+                       cursor: pointer;
+                       font-size: 14px;
+                       white-space: nowrap;">
+            Search
+        </button>
+    </form>
+    <div style="top: 20px; right: 20px; z-index: 1000;">
+    <button onclick="downloadData()" class="download-button">
+        <i class="fas fa-download"></i> Download Data
+    </button>
+    </div>
+</div>
+    <script>
+    function handleSearch(event) {
+    event.preventDefault();
+
+    // Get current URL parameters
+    const currentParams = new URLSearchParams(window.location.search);
+
+    // Get values from form elements
+<!--    const searchText = document.getElementById('searchText').value;-->
+<!--    const sentenceChecked = document.getElementById('sentenceCheck').checked;-->
+<!--    const keywordsChecked = document.getElementById('keywordsCheck').checked;-->
+
+    // Get dates and format them
+    let startDate = document.getElementById('startDate').value;
+    let endDate = document.getElementById('endDate').value;
+
+    // Convert dates from yyyy-mm-dd to mm/dd/yyyy
+    if (startDate) {
+        const [year, month, day] = startDate.split('-');
+        startDate = `${month}/${day}/${year}`;
+    }
+    if (endDate) {
+        const [year, month, day] = endDate.split('-');
+        endDate = `${month}/${day}/${year}`;
+    }
+
+    // Add new search parameters
+<!--    if (searchText) currentParams.set('search_term', searchText);-->
+
+    // Remove existing column parameters and add new ones
+<!--    currentParams.delete('columns');-->
+<!--    if (sentenceChecked) currentParams.append('columns', 'sentence');-->
+<!--    if (keywordsChecked) currentParams.append('columns', 'keywords');-->
+
+    if (startDate) currentParams.set('start_date', startDate);
+    if (endDate) currentParams.set('end_date', endDate);
+
+    // Construct new URL with all parameters
+    const url = `${window.location.pathname}?${currentParams.toString()}`;
+    window.location.href = url;
+}
+</script>
+
+        <!-- Add this button at the top right corner of the page -->
+
+<style>
+    .download-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.download-button:hover {
+    background-color: #45a049;
+}
+</style>
+<!-- Add this JavaScript function -->
+<script>
+function downloadData() {
+    // Get current URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Construct download URL with current parameters
+    let downloadUrl = '/download_data?';
+
+    // Add current search parameters
+    if (urlParams.has('search_term')) {
+        downloadUrl += `search_term=${urlParams.get('search_term')}&`;
+    }
+
+    // Handle multiple columns parameters
+    const columns = urlParams.getAll('columns');
+    if (columns.length > 0) {
+        columns.forEach(column => {
+            downloadUrl += `columns=${encodeURIComponent(column)}&`;
+        });
+    }
+
+    if (urlParams.has('start_date')) {
+        downloadUrl += `start_date=${urlParams.get('start_date')}&`;
+    }
+    if (urlParams.has('end_date')) {
+        downloadUrl += `end_date=${urlParams.get('end_date')}&`;
+    }
+
+    // Add location parameters based on current page
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts.includes('keyword')) {
+        downloadUrl += `country=Vietnam&`;
+        downloadUrl+=`keyword=${pathParts[2]}&`;
+    }
+    if(urlParams.has('province')){
+    downloadUrl += `province=${urlParams.get('province')}&`;
+    }
+    if(urlParams.has('district')){
+    downloadUrl += `district=${urlParams.get('district')}&`;
+    }
+
+    // Remove trailing '&' if exists
+    downloadUrl = downloadUrl.endsWith('&') ? downloadUrl.slice(0, -1) : downloadUrl;
+
+    // Trigger download
+    window.location.href = downloadUrl;
+}
+</script>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-lg font-semibold text-gray-700">Total Locations</h3>
+                <p class="text-3xl font-bold">{{ location_count }}</p>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div id="map">
+                {{ map_html|safe }}
+            </div>
+        </div>
+        {% if graph_json %}
+        <div class="bg-white rounded-lg shadow p-4">
+            <h2 class="text-xl font-bold mb-4">Articles Timeline</h2>
+            <div id="timeline"></div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <h2 class="text-xl font-bold mb-4">Interactive Stacked Bar Chart</h2>
+        <div id="chart"></div>
+        {% endif %}
+            <div class="bg-white rounded-lg shadow p-4" id="filtered-articles">
+        <h2 class="text-xl font-bold mb-4">Articles</h2>
+        <div id="article-content">
+            <ul class="space-y-2">
+                {% for article in data['articles'] %}
+                <li>
+                    <a href="{{ article['source'] }}" target="_blank" class="text-blue-600 hover:text-blue-800">{{ article['source'] }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    </div>
+        <script>
+            // const graphData = {{ graph_json|safe }};
+            // Plotly.newPlot('timeline', graphData.figure.data, graphData.figure.layout);
+
+            // Parse the graph data
+        const graphData = JSON.parse('{{ graph_json | safe }}');
+        const articleData = graphData.article_data;
+
+        // Create the plot
+        Plotly.newPlot('chart', graphData.figure.data, graphData.figure.layout);
+
+        // Add click event handler
+        document.getElementById('chart').on('plotly_click', function(data) {
+            const point = data.points[0];
+            const year = point.customdata[0];
+            const domain = point.customdata[1];
+
+            // Get articles for the selected year and domain
+            const articles = articleData[year]?.[domain] || [];
+
+            // Update the article list
+            const articleContent = document.getElementById('article-content');
+            if (articles.length > 0) {
+                const articleList = articles.map(url =>
+                    `<li><a href="${url}" target="_blank" class="text-blue-600 hover:text-blue-800">${url}</a></li>`
+                ).join('');
+
+                articleContent.innerHTML = `
+                    <h4 class="text-xl font-bold mb-4">${domain} articles from ${year}</h4>
+                    <ul>${articleList}</ul>
+                `;
+            } else {
+                articleContent.innerHTML = `<p>No articles found for ${domain} in ${year}</p>`;
+            }
+        });
+
+        // Add reset functionality when clicking elsewhere on the chart
+        document.getElementById('chart').on('plotly_clickannotation', function() {
+            const articleContent = document.getElementById('article-content');
+            articleContent.innerHTML = `
+                <ul>
+                {% for article in data['articles'] %}
+                    <li><a href="{{ article["source"] }}" target="_blank">{{ article["source"] }}</a></li>
+                {% endfor %}
+                </ul>
+            `;
+        });
+        </script>
+
+    </div>
+</body>
+</html>
